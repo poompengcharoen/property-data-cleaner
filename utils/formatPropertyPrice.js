@@ -7,13 +7,15 @@ const formatPropertyPrice = async () => {
 			$or: [{ numericalPrice: { $exists: false } }, { numericalPrice: null }],
 		}).limit(100)
 
-		properties.forEach((property) => {
-			const { priceNumeric, currencyCode } = formatPrice(property.price)
-			property.priceNumeric = priceNumeric
-			property.currencyCode = currencyCode
-			property.save()
-			console.log(property)
-		})
+		await Promise.all(
+			properties.map((property) => {
+				const { priceNumeric, currencyCode } = formatPrice(property.price)
+				property.priceNumeric = priceNumeric
+				property.currencyCode = currencyCode
+				property.save()
+				console.log(property)
+			})
+		)
 	} catch (error) {
 		console.error('Error analyzing and correcting properties:', error)
 	}
