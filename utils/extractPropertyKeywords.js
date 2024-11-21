@@ -61,7 +61,7 @@ const extractPropertyKeywords = async (property, retries = 3) => {
 	let attempt = 0
 	while (attempt < retries) {
 		try {
-			const result = await ollama.generate({ model: 'llama3.2', prompt })
+			const result = await ollama.generate({ model: 'llama3.2:1b', prompt })
 			const cleanedKeywords = cleanKeywords(result.response)
 			return deduplicateAndOptimize(cleanedKeywords)
 		} catch (error) {
