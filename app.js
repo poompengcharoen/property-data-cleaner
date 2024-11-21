@@ -29,7 +29,7 @@ const main = async () => {
 // Clean immediately when the script starts
 await main()
 
-// Schedule the cron job to run at midnight and midday every day
-cron.schedule('* * * * *', async () => {
+// Schedule the cron job
+cron.schedule('*/10 * * * *', async () => {
 	await main()
 })

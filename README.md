@@ -80,11 +80,11 @@ This will:
 
 ### Automated Scheduling with `node-cron`
 
-The project uses `node-cron` to automate data cleaning at regular intervals. By default, the tasks run every minute for testing purposes. To customize the interval:
+The project uses `node-cron` to automate data cleaning at regular intervals. By default, the tasks run every 10 minutes for testing purposes. To customize the interval:
 
 1. Open `app.js` and locate the cron schedule:
    ```javascript
-   cron.schedule('* * * * *', async () => {
+   cron.schedule('*/10 * * * *', async () => {
    	await main()
    })
    ```
