@@ -14,8 +14,6 @@ const assignPropertyKeywords = async () => {
 					property.keywords = keywords
 					await property.save()
 				}
-
-				console.log(property)
 			})
 		)
 	} catch (error) {

@@ -13,7 +13,6 @@ const formatPropertyPrice = async () => {
 				property.priceNumeric = priceNumeric
 				property.currencyCode = currencyCode
 				property.save()
-				console.log(property)
 			})
 		)
 	} catch (error) {

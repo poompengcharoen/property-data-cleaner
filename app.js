@@ -4,14 +4,13 @@ import assignPropertyKeywords from './utils/assignPropertyKeywords.js'
 import cron from 'node-cron'
 import formatPropertyPrice from './utils/formatPropertyPrice.js'
 
-let isDbConnected = false
+let dbConnection = null
 
-// Initialize database connection
+// Initialize and manage a persistent database connection
 const initDbConnection = async () => {
-	if (!isDbConnected) {
+	if (!dbConnection) {
 		try {
-			await connectDb()
-			isDbConnected = true
+			dbConnection = await connectDb()
 			console.log('Database connected.')
 		} catch (error) {
 			console.error('Failed to connect to database:', error)
@@ -20,12 +19,12 @@ const initDbConnection = async () => {
 	}
 }
 
-// Close database connection
+// Close the database connection
 const closeDbConnection = async () => {
-	if (isDbConnected) {
+	if (dbConnection) {
 		try {
 			await disconnectDb()
-			isDbConnected = false
+			dbConnection = null
 			console.log('Database disconnected.')
 		} catch (error) {
 			console.error('Failed to disconnect from database:', error)
@@ -33,17 +32,15 @@ const closeDbConnection = async () => {
 	}
 }
 
-// Task wrapper with error handling
+// Task wrapper with connection and error handling
 const runTask = async (taskName, taskFn) => {
 	try {
 		console.log(`[${taskName}] Task started...`)
-		await initDbConnection()
+		await initDbConnection() // Ensure the database is connected
 		await taskFn()
 		console.log(`[${taskName}] Task completed successfully.`)
 	} catch (error) {
 		console.error(`[${taskName}] Error:`, error)
-	} finally {
-		await closeDbConnection()
 	}
 }
 
@@ -52,8 +49,17 @@ const formatPricesTask = () => runTask('Format Prices', formatPropertyPrice)
 const assignKeywordsTask = () => runTask('Assign Keywords', assignPropertyKeywords)
 
 // Execute tasks immediately
-formatPricesTask()
-assignKeywordsTask()
+;(async () => {
+	try {
+		await initDbConnection()
+		await formatPricesTask()
+		await assignKeywordsTask()
+	} catch (error) {
+		console.error('Initial task execution failed:', error)
+	} finally {
+		await closeDbConnection()
+	}
+})()
 
 // Schedule the tasks
 cron.schedule('*/1 * * * *', formatPricesTask) // Run every 1 minute
