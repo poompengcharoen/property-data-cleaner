@@ -4,22 +4,21 @@ import assignPropertyKeywords from './utils/assignPropertyKeywords.js'
 import cron from 'node-cron'
 import formatPropertyPrice from './utils/formatPropertyPrice.js'
 
+// Database connection management
 let dbConnection = null
 
-// Initialize and manage a persistent database connection
 const initDbConnection = async () => {
 	if (!dbConnection) {
 		try {
 			dbConnection = await connectDb()
 			console.log('Database connected.')
 		} catch (error) {
-			console.error('Failed to connect to database:', error)
+			console.error('Database connection error:', error)
 			throw error
 		}
 	}
 }
 
-// Close the database connection
 const closeDbConnection = async () => {
 	if (dbConnection) {
 		try {
@@ -27,16 +26,15 @@ const closeDbConnection = async () => {
 			dbConnection = null
 			console.log('Database disconnected.')
 		} catch (error) {
-			console.error('Failed to disconnect from database:', error)
+			console.error('Error while disconnecting from database:', error)
 		}
 	}
 }
 
-// Task wrapper with connection and error handling
+// Task runner with connection management and logging
 const runTask = async (taskName, taskFn) => {
+	console.log(`[${taskName}] Task started.`)
 	try {
-		console.log(`[${taskName}] Task started...`)
-		await initDbConnection() // Ensure the database is connected
 		await taskFn()
 		console.log(`[${taskName}] Task completed successfully.`)
 	} catch (error) {
@@ -44,25 +42,40 @@ const runTask = async (taskName, taskFn) => {
 	}
 }
 
-// Define tasks
+// Scheduled task initialization
+const createScheduledTask = (cronExpression, taskName, taskFn) => {
+	cron.schedule(cronExpression, async () => {
+		try {
+			await initDbConnection()
+			await runTask(taskName, taskFn)
+		} catch (error) {
+			console.error(`[${taskName}] Failed during scheduled run:`, error)
+		} finally {
+			await closeDbConnection()
+		}
+	})
+	console.log(`[${taskName}] Scheduled with cron expression: ${cronExpression}`)
+}
+
+// Task definitions
 const formatPricesTask = () => runTask('Format Prices', formatPropertyPrice)
 const assignKeywordsTask = () => runTask('Assign Keywords', assignPropertyKeywords)
 
-// Execute tasks immediately
+// Initial execution and scheduling
 ;(async () => {
 	try {
 		await initDbConnection()
 		await formatPricesTask()
 		await assignKeywordsTask()
 	} catch (error) {
-		console.error('Initial task execution failed:', error)
+		console.error('Initial task execution error:', error)
 	} finally {
 		await closeDbConnection()
 	}
+
+	// Schedule the tasks
+	createScheduledTask('*/1 * * * *', 'Format Prices', formatPropertyPrice)
+	createScheduledTask('*/10 * * * *', 'Assign Keywords', assignPropertyKeywords)
+
+	console.log('All tasks scheduled successfully.')
 })()
-
-// Schedule the tasks
-cron.schedule('*/1 * * * *', formatPricesTask) // Run every 1 minute
-cron.schedule('*/10 * * * *', assignKeywordsTask) // Run every 10 minutes
-
-console.log('Cron jobs scheduled successfully!')
