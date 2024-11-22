@@ -4,32 +4,37 @@ import assignPropertyKeywords from './utils/assignPropertyKeywords.js'
 import cron from 'node-cron'
 import formatPropertyPrice from './utils/formatPropertyPrice.js'
 
-const main = async () => {
+// Function to format property prices
+const formatPricesTask = async () => {
 	try {
-		// Connect to database
 		await connectDb()
-
-		// Format property price
-		console.log('Formatting property price...')
+		console.log('Formatting property prices...')
 		await formatPropertyPrice()
-
-		// Assign each property with keywords
-		console.log('Assigning property keywords...')
-		await assignPropertyKeywords()
-
-		// Disconnect from database
 		await disconnectDb()
-
-		console.log('Done!')
+		console.log('Price formatting done!')
 	} catch (error) {
-		console.error('Error:', error)
+		console.error('Error formatting property prices:', error)
 	}
 }
 
-// Clean immediately when the script starts
-await main()
+// Function to assign property keywords
+const assignKeywordsTask = async () => {
+	try {
+		await connectDb()
+		console.log('Assigning property keywords...')
+		await assignPropertyKeywords()
+		await disconnectDb()
+		console.log('Keyword assignment done!')
+	} catch (error) {
+		console.error('Error assigning property keywords:', error)
+	}
+}
 
-// Schedule the cron job
-cron.schedule('*/10 * * * *', async () => {
-	await main()
-})
+formatPricesTask()
+assignKeywordsTask()
+
+// Schedule the tasks
+cron.schedule('*/1 * * * *', formatPricesTask) // Run every 1 minute
+cron.schedule('*/10 * * * *', assignKeywordsTask) // Run every 10 minutes
+
+console.log('Cron jobs scheduled successfully!')
