@@ -4,7 +4,7 @@ import formatPrice from './formatPrice.js'
 const formatPropertyPrice = async () => {
 	try {
 		const properties = await Property.find({
-			$or: [{ numericalPrice: { $exists: false } }, { numericalPrice: null }],
+			$or: [{ priceNumeric: { $exists: false } }, { priceNumeric: null }],
 		}).limit(100)
 
 		await Promise.all(
