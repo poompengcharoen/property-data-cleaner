@@ -4,21 +4,18 @@ This project is a Node.js application designed to clean and enrich property data
 
 ## Features
 
-- **Property Price Formatting**: Parses and standardizes property price strings into numerical values and currency codes.
-- **Keyword Assignment**: Generates targeted and relevant keywords for properties using an AI model.
-- **Automated Scheduling**: Uses `node-cron` to schedule periodic data cleaning tasks.
-- **Retry Mechanism**: Retries keyword generation in case of temporary failures.
+- **Property Price Formatting**: Parses and standardizes property price strings into numerical values and currency codes, scheduled to run every minute.
+- **Keyword Assignment**: Generates targeted and relevant keywords for properties using an AI model, scheduled to run every 10 minutes.
+- **Automated Scheduling**: Uses `node-cron` to independently schedule periodic data cleaning tasks.
 - **MongoDB Integration**: Reads and updates property data in MongoDB.
 
 ## Project Structure
 
-- **`app.js`**: Main entry point that connects to MongoDB, executes data cleaning tasks, and schedules them using `node-cron`.
+- **`app.js`**: Main entry point that initializes and schedules data cleaning tasks.
 - **`configs/db.js`**: Manages MongoDB connection and disconnection.
 - **`utils/`**: Contains utility scripts:
   - `formatPropertyPrice.js`: Formats property price strings.
   - `assignPropertyKeywords.js`: Assigns keywords to properties.
-  - `formatPrice.js`: Extracts numerical price and currency code from raw strings.
-  - `extractPropertyKeywords.js`: Uses an AI model to generate keywords.
 - **`models/property.js`**: Defines the MongoDB schema for property data.
 
 ## Requirements
@@ -65,30 +62,35 @@ This project is a Node.js application designed to clean and enrich property data
 
 ## Usage
 
-To manually run the cleaning tasks:
+The application performs the following tasks:
 
-```bash
-yarn start
+- **Manual Execution**: To run the cleaning tasks manually, execute:
+
+  ```bash
+  yarn start
+  ```
+
+  This will:
+
+  - Connect to MongoDB
+  - Format property prices
+  - Assign relevant keywords
+  - Disconnect from MongoDB
+
+- **Automated Scheduling**: The application automatically schedules the tasks:
+  - Formats property prices every minute.
+  - Assigns property keywords every 10 minutes.
+
+### Customizing the Schedule
+
+To modify the schedule, open `app.js` and locate the `node-cron` configuration:
+
+```javascript
+cron.schedule('*/1 * * * *', formatPricesTask) // Format prices every 1 minute
+cron.schedule('*/10 * * * *', assignKeywordsTask) // Assign keywords every 10 minutes
 ```
 
-This will:
-
-- Connect to MongoDB
-- Format property prices
-- Assign relevant keywords
-- Disconnect from MongoDB
-
-### Automated Scheduling with `node-cron`
-
-The project uses `node-cron` to automate data cleaning at regular intervals. By default, the tasks run every 10 minutes for testing purposes. To customize the interval:
-
-1. Open `app.js` and locate the cron schedule:
-   ```javascript
-   cron.schedule('*/10 * * * *', async () => {
-   	await main()
-   })
-   ```
-2. Modify the cron expression to your desired schedule (e.g., midnight and midday daily: `0 0,12 * * *`).
+Change the cron expressions as needed.
 
 ## MongoDB Schema
 
@@ -108,7 +110,6 @@ Each property entry contains the following fields:
 
 ## Error Handling
 
-- **Keyword Extraction**: Retries up to 3 times to ensure successful generation.
 - **Database Connection**: Logs errors if unable to connect to MongoDB.
 - **Duplicate Handling**: Ensures no duplicate entries for price or keywords by checking existing fields.
 
