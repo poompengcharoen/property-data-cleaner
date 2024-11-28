@@ -1,6 +1,5 @@
 import { connectDb, disconnectDb } from './configs/db.js'
 
-import assignPropertyKeywords from './utils/assignPropertyKeywords.js'
 import cron from 'node-cron'
 import formatPropertyPrice from './utils/formatPropertyPrice.js'
 
@@ -59,14 +58,12 @@ const createScheduledTask = (cronExpression, taskName, taskFn) => {
 
 // Task definitions
 const formatPricesTask = () => runTask('Format Prices', formatPropertyPrice)
-const assignKeywordsTask = () => runTask('Assign Keywords', assignPropertyKeywords)
 
 // Initial execution and scheduling
 ;(async () => {
 	try {
 		await initDbConnection()
 		await formatPricesTask()
-		await assignKeywordsTask()
 	} catch (error) {
 		console.error('Initial task execution error:', error)
 	} finally {
@@ -75,7 +72,6 @@ const assignKeywordsTask = () => runTask('Assign Keywords', assignPropertyKeywor
 
 	// Schedule the tasks
 	createScheduledTask('*/1 * * * *', 'Format Prices', formatPropertyPrice)
-	createScheduledTask('*/10 * * * *', 'Assign Keywords', assignPropertyKeywords)
 
 	console.log('All tasks scheduled successfully.')
 })()
